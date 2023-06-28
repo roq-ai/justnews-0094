@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["clientExtensions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model client {
+  id                String              @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  description       String?             @db.VarChar(255)
+  image             String?             @db.VarChar(255)
+  name              String              @db.VarChar(255)
+  created_at        DateTime            @default(now()) @db.Timestamp(6)
+  updated_at        DateTime            @default(now()) @db.Timestamp(6)
+  user_id           String              @db.Uuid
+  tenant_id         String              @db.VarChar(255)
+  user              user                @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  client_preference client_preference[]
+}
+
+model client_preference {
+  id               String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  client_id        String?        @db.Uuid
+  news_category_id String?        @db.Uuid
+  created_at       DateTime       @default(now()) @db.Timestamp(6)
+  updated_at       DateTime       @default(now()) @db.Timestamp(6)
+  client           client?        @relation(fields: [client_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  news_category    news_category? @relation(fields: [news_category_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model news_card {
+  id               String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  summary          String         @db.VarChar(255)
+  photo            String?        @db.VarChar(255)
+  link             String         @db.VarChar(255)
+  news_source_id   String?        @db.Uuid
+  news_category_id String?        @db.Uuid
+  created_at       DateTime       @default(now()) @db.Timestamp(6)
+  updated_at       DateTime       @default(now()) @db.Timestamp(6)
+  news_category    news_category? @relation(fields: [news_category_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  news_source      news_source?   @relation(fields: [news_source_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model news_category {
+  id                String              @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  category_name     String              @db.VarChar(255)
+  editor_id         String?             @db.Uuid
+  created_at        DateTime            @default(now()) @db.Timestamp(6)
+  updated_at        DateTime            @default(now()) @db.Timestamp(6)
+  client_preference client_preference[]
+  news_card         news_card[]
+  user              user?               @relation(fields: [editor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model news_source {
+  id          String      @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  source_name String      @db.VarChar(255)
+  editor_id   String?     @db.Uuid
+  created_at  DateTime    @default(now()) @db.Timestamp(6)
+  updated_at  DateTime    @default(now()) @db.Timestamp(6)
+  news_card   news_card[]
+  user        user?       @relation(fields: [editor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model user {
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email         String          @unique @db.VarChar(255)
+  firstName     String?         @db.VarChar(255)
+  lastName      String?         @db.VarChar(255)
+  roq_user_id   String          @db.VarChar(255)
+  tenant_id     String          @db.VarChar(255)
+  created_at    DateTime        @default(now()) @db.Timestamp(6)
+  updated_at    DateTime        @default(now()) @db.Timestamp(6)
+  client        client[]
+  news_category news_category[]
+  news_source   news_source[]
+}
